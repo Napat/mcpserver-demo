@@ -1,0 +1,14 @@
+{
+    "Servers": {
+        "1": {
+            "Name": "MCP Postgres Server",
+            "Group": "Servers",
+            "Host": "postgres",
+            "Port": 5432,
+            "MaintenanceDB": "postgres",
+            "Username": "postgres",
+            "SSLMode": "prefer",
+            "Comment": "MCP PostgreSQL Database Server"
+        }
+    }
+} 

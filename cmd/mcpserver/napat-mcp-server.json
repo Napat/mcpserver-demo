@@ -1,0 +1,8 @@
+{
+    "mcpServers": {
+        "napat-mcpserver-demo" :{
+            "command": "docker",
+            "args": ["run", "--rm", "-i", "napat/mcpserver-demo:1.0"]
+        }
+    }
+}

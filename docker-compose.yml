@@ -1,0 +1,119 @@
+services:
+  migration:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: mcpserver-migration
+    command: ["sh", "-c", "make migration"]
+    env_file:
+      - configs/api/.env
+      - configs/database/.env.postgres
+    environment:
+      - DB_HOST=postgres
+    volumes:
+      - .:/app
+      - go-modules:/go/pkg/mod
+    depends_on:
+      - postgres
+    networks:
+      - mcpserver-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: mcpserver-app
+    ports:
+      - "8080:8080"
+    env_file:
+      - configs/api/.env
+      - configs/database/.env.postgres
+    environment:
+      - DB_HOST=postgres
+      - SERVER_HOST=0.0.0.0
+      - MINIO_ENDPOINT=mcpserver-minio:9000
+      - MINIO_PUBLIC_URL=http://localhost:9000
+      - DOCKER_ENV=true
+      - REDIS_ADDR=redis:6379
+    volumes:
+      - .:/app
+      - go-modules:/go/pkg/mod
+    depends_on:
+      - migration
+      - redis
+    networks:
+      - mcpserver-network
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:14-alpine
+    container_name: mcpserver-postgres
+    ports:
+      - "5432:5432"
+    env_file:
+      - configs/database/.env.postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - mcpserver-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: mcpserver-pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@example.com
+      - PGADMIN_DEFAULT_PASSWORD=admin123
+    ports:
+      - "5050:80"
+    volumes:
+      - ./configs/pgadmin/servers.json:/pgadmin4/servers.json
+    depends_on:
+      - postgres
+    networks:
+      - mcpserver-network
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:latest
+    container_name: mcpserver-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server /data --console-address ":9001"
+    networks:
+      - mcpserver-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    container_name: mcpserver-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - mcpserver-network
+    restart: unless-stopped
+
+networks:
+  mcpserver-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  minio_data:
+  go-modules:

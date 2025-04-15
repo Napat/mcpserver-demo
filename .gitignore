@@ -1,0 +1,45 @@
+# Binaries and build output
+/bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories
+vendor/
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local env files
+.env
+configs/temp/
+
+# Go workspace file
+go.work
+
+# Logs
+logs/
+*.log
+
+# Air temporary files
+/tmp/
+air.log
+
+# Static files generated during development
+/public/uploads/
